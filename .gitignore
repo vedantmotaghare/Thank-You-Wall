@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.pnpm-store
+
+# Hardhat & Build outputs
+cache/
+artifacts/
+!src/contracts/
+dist/
+
+# Environment & Private keys
+.env
+.env.local
+*.pem
+
+# System files
+.DS_Store
+Thumbs.db

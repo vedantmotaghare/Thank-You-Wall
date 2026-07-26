@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Thank-You Wall | On-Chain Creator Tip Jar</title>
+  <meta name="description" content="Support your favorite webcomic artist directly on Ethereum. Transparent, zero platform fees, permanent on-chain message log." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Navigation / Header -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="brand">
+          <div class="logo-icon">☕</div>
+          <div class="brand-text">
+            <span class="brand-title">The Thank-You Wall</span>
+            <span class="brand-subtitle">On-Chain Creator Micro-Tips</span>
+          </div>
+        </div>
+
+        <div class="nav-controls">
+          <!-- Network Indicator Pill -->
+          <div id="network-pill" class="pill network-pill disconnected">
+            <span class="status-dot"></span>
+            <span id="network-name">Not Connected</span>
+          </div>
+
+          <!-- Mode Toggle (Live Wallet vs Demo Simulator) -->
+          <button id="mode-toggle-btn" class="pill-btn mode-btn" title="Toggle Demo Simulator">
+            <span class="icon">🧪</span>
+            <span id="mode-label">Demo Mode: Off</span>
+          </button>
+
+          <!-- Wallet Connect Button -->
+          <button id="connect-wallet-btn" class="btn btn-primary">
+            <span class="btn-icon">🦊</span>
+            <span id="connect-text">Connect Wallet</span>
+          </button>
+
+          <!-- Connected Account Badge (Hidden until connected) -->
+          <div id="account-badge" class="account-badge hidden">
+            <span id="user-balance" class="balance-tag">0.00 ETH</span>
+            <span id="user-address" class="address-tag">0x0000...0000</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Network Alert Banner -->
+    <div id="network-alert" class="network-alert hidden">
+      <div class="alert-content">
+        <span class="alert-icon">⚠️</span>
+        <span id="network-alert-msg">You are connected to the wrong network. Please switch to Ethereum Sepolia or Local Host.</span>
+        <button id="switch-network-btn" class="btn btn-warning btn-sm">Switch Network</button>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="main-content">
+      <!-- Hero Artist Banner Section -->
+      <section class="hero-card">
+        <div class="hero-background-glow"></div>
+        <div class="hero-grid">
+          <div class="artist-profile">
+            <div class="avatar-container">
+              <img src="/artist_avatar.jpg" alt="Maya - Webcomic Artist" class="artist-avatar" id="artist-avatar-img" />
+              <div class="live-badge" title="Live On-Chain Contract Active">LIVE ON-CHAIN</div>
+            </div>
+            <div class="artist-meta">
+              <div class="artist-header-row">
+                <h1 class="artist-name">Maya’s Comic Strips</h1>
+                <span class="verified-badge" title="Verified Smart Contract">✓ Contract Verified</span>
+              </div>
+              <p class="artist-bio">
+                Draws free webcomics every Tuesday & Friday for 2+ years! Readers wanted a way to chip in for coffee without middleman fees, tax paperwork, or country blocks. 
+                Every tip and message is written directly to the Ethereum blockchain — 100% transparent and permanent.
+              </p>
+              <div class="artist-tags">
+                <span class="tag">🎨 Webcomic Creator</span>
+                <span class="tag">☕ Coffee Supporter Jar</span>
+                <span class="tag">⚡ 0% Middleman Cut</span>
+                <span class="tag">📜 Immutable Event Log</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Bar Section -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">☕</div>
+          <div class="stat-info">
+            <span class="stat-label">Total Coffee Tips</span>
+            <span class="stat-value" id="stat-total-tips">0</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">💎</div>
+          <div class="stat-info">
+            <span class="stat-label">Total ETH Tipped</span>
+            <span class="stat-value" id="stat-total-eth">0.000 ETH</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🏦</div>
+          <div class="stat-info">
+            <span class="stat-label">Contract Balance</span>
+            <div class="stat-value-row">
+              <span class="stat-value" id="stat-contract-balance">0.000 ETH</span>
+              <button id="withdraw-btn" class="btn btn-outline-gold btn-xs hidden" title="Withdraw balance to creator wallet">
+                Withdraw ETH
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🔗</div>
+          <div class="stat-info">
+            <span class="stat-label">Contract Address</span>
+            <a id="contract-link" href="#" target="_blank" class="stat-link" title="View on Block Explorer">
+              0x000...000 ↗
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Owner Creator Dashboard Banner (Shown if connected wallet is owner) -->
+      <section id="owner-dashboard-banner" class="owner-banner hidden">
+        <div class="owner-banner-content">
+          <div class="owner-info">
+            <span class="owner-badge">👑 Artist Creator Mode</span>
+            <span id="owner-banner-text">You are connected as the contract owner! Accumulated tips can be withdrawn directly to your wallet.</span>
+          </div>
+          <button id="owner-withdraw-action" class="btn btn-gold">
+            <span class="btn-icon">💰</span> Withdraw Contract Balance
+          </button>
+        </div>
+      </section>
+
+      <!-- Grid Layout: Tip Form & Live Supporter Wall -->
+      <div class="content-layout">
+        <!-- Left: Tipping Form -->
+        <div class="form-container">
+          <div class="card tip-form-card">
+            <div class="card-header">
+              <h2 class="card-title">Send a Tip to Maya</h2>
+              <p class="card-desc">Choose an amount and leave a short note to get featured on the Thank-You Wall!</p>
+            </div>
+
+            <!-- Quick Amount Presets -->
+            <div class="preset-section">
+              <label class="input-label">Select Tip Amount</label>
+              <div class="preset-buttons">
+                <button class="preset-btn active" data-amount="0.001">
+                  <span class="preset-icon">☕</span>
+                  <span class="preset-amount">0.001 ETH</span>
+                  <span class="preset-label">Espresso</span>
+                </button>
+                <button class="preset-btn" data-amount="0.005">
+                  <span class="preset-icon">🎨</span>
+                  <span class="preset-amount">0.005 ETH</span>
+                  <span class="preset-label">Ink & Paper</span>
+                </button>
+                <button class="preset-btn" data-amount="0.01">
+                  <span class="preset-icon">📚</span>
+                  <span class="preset-amount">0.01 ETH</span>
+                  <span class="preset-label">Comic Page</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom ETH Amount Input -->
+            <div class="input-group">
+              <label for="custom-amount-input" class="input-label">Custom Amount (ETH)</label>
+              <div class="input-wrapper">
+                <input type="number" id="custom-amount-input" step="0.0001" min="0.0001" value="0.001" placeholder="e.g. 0.005" />
+                <span class="input-suffix">ETH</span>
+              </div>
+            </div>
+
+            <!-- Supporter Message Input -->
+            <div class="input-group">
+              <div class="label-row">
+                <label for="supporter-message-input" class="input-label">Supporter Message (On-Chain)</label>
+                <span id="char-counter" class="char-counter">0 / 280</span>
+              </div>
+              <textarea 
+                id="supporter-message-input" 
+                rows="3" 
+                maxlength="280" 
+                placeholder="Write a cozy note for Maya! Your message will be recorded in the smart contract event log forever..."
+              ></textarea>
+            </div>
+
+            <!-- Transaction Status / Pending Box -->
+            <div id="tx-status-box" class="tx-status-box hidden">
+              <div class="status-spinner-row">
+                <div id="status-spinner" class="spinner"></div>
+                <div class="status-text-col">
+                  <span id="status-title" class="status-title">Transaction Initiated</span>
+                  <span id="status-desc" class="status-desc">Please confirm the tip in your browser wallet...</span>
+                </div>
+              </div>
+              <div id="tx-hash-link-container" class="tx-hash-link hidden">
+                <a id="tx-hash-link" href="#" target="_blank" class="explorer-link">View Tx on Explorer ↗</a>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button id="send-tip-btn" class="btn btn-submit btn-block">
+              <span class="btn-icon">💖</span>
+              <span id="send-tip-text">Send 0.001 ETH Tip On-Chain</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Live Supporter Wall Feed -->
+        <div class="feed-container">
+          <div class="card feed-card">
+            <div class="feed-header">
+              <div class="feed-title-col">
+                <h2 class="card-title">The Thank-You Wall</h2>
+                <span class="feed-subtitle">Live Ethereum Event Logs (eth_getLogs)</span>
+              </div>
+              <div class="feed-actions">
+                <button id="refresh-feed-btn" class="btn btn-icon-only" title="Fetch latest contract events">
+                  🔄
+                </button>
+              </div>
+            </div>
+
+            <!-- Feed Filter Tabs -->
+            <div class="filter-tabs">
+              <button class="filter-tab active" data-filter="all">All Tips</button>
+              <button class="filter-tab" data-filter="recent">Latest First</button>
+              <button class="filter-tab" data-filter="top">Top Tips 🏆</button>
+            </div>
+
+            <!-- Supporter Feed List -->
+            <div id="supporter-feed" class="supporter-feed">
+              <!-- Empty state default -->
+              <div id="feed-empty-state" class="empty-state">
+                <div class="empty-icon">🎨</div>
+                <h3>No tips recorded yet!</h3>
+                <p>Be the very first supporter to leave a permanent message on Maya's on-chain Thank-You Wall!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-container">
+        <p>Built with Solidity, Ethereum Sepolia, and Hardhat. 100% Transparent & On-Chain Event Driven.</p>
+        <div class="footer-links">
+          <span>Decentralized Creator Micro-Tipping</span> • 
+          <a href="https://sepolia.etherscan.io" target="_blank">Sepolia Explorer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
